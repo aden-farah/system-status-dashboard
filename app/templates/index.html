@@ -4,9 +4,91 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>System Status Dashboard</title>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
   </head>
+
   <body>
-    <h1>System Status Dashboard</h1>
-    <p>The application is running.</p>
+    <main class="dashboard">
+      <header class="dashboard-header">
+        <div>
+          <p class="eyebrow">Infrastructure Monitoring</p>
+          <h1>System Status Dashboard</h1>
+          <p class="subtitle">
+            A quick overview of the server and application health.
+          </p>
+        </div>
+
+        <span class="status-badge">
+          <span class="status-dot"></span>
+          Healthy
+        </span>
+      </header>
+
+      <section class="status-grid">
+        <article class="status-card">
+          <div class="card-heading">
+            <span class="card-icon">🖥</span>
+            <p class="card-label">CPU Usage</p>
+          </div>
+          <h2 id="cpu-value">--%</h2>
+          <p class="card-description">Current processor usage</p>
+        </article>
+
+        <article class="status-card">
+          <div class="card-heading">
+            <span class="card-icon">🧠</span>
+            <p class="card-label">Memory Usage</p>
+          </div>
+          <h2 id="memory-value">--%</h2>
+          <p class="card-description">Current memory usage</p>
+        </article>
+
+        <article class="status-card">
+          <div class="card-heading">
+            <span class="card-icon">💾</span>
+            <p class="card-label">Disk Usage</p>
+          </div>
+          <h2 id="disk-value">--%</h2>
+          <p class="card-description">Current disk usage</p>
+        </article>
+
+        <article class="status-card">
+          <div class="card-heading">
+            <span class="card-icon">🐳</span>
+            <p class="card-label">Container Status</p>
+          </div>
+          <h2>Running</h2>
+          <p class="card-description">Docker container state</p>
+        </article>
+      </section>
+
+      <section class="details-panel">
+        <div class="detail-row">
+          <span>Server Status</span>
+          <strong>Healthy</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Server Uptime</span>
+          <strong id="uptime-value">Not available yet</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Application Version</span>
+          <strong id="version-value">v1.0.0</strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Last Updated</span>
+          <strong id="last-updated">Not available yet</strong>
+        </div>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
   </body>
 </html>
