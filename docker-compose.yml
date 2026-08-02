@@ -16,6 +16,8 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     depends_on:
       - flask-app
+      - node-exporter
+      - cadvisor
     restart: unless-stopped
 
   grafana:
@@ -23,6 +25,30 @@ services:
     container_name: grafana
     ports:
       - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
     restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    restart: unless-stopped
+
+volumes:
+  grafana-data:

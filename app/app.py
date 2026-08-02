@@ -1,12 +1,65 @@
 from datetime import datetime, timezone
+from time import perf_counter
 
 import psutil
-from flask import Flask, jsonify, render_template
-from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from flask import Flask, g, jsonify, render_template, request
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Histogram,
+    generate_latest,
+)
 
 app = Flask(__name__)
 
 APP_VERSION = "1.0.0"
+
+
+# Counts HTTP requests by method, endpoint and status code.
+HTTP_REQUESTS_TOTAL = Counter(
+    "http_requests_total",
+    "Total number of HTTP requests",
+    ["method", "endpoint", "status_code"],
+)
+
+# Measures how long requests take.
+HTTP_REQUEST_DURATION_SECONDS = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
+)
+
+
+@app.before_request
+def start_request_timer():
+    # Prometheus visits /metrics every 5 seconds.
+    # We exclude it so it does not inflate the application traffic numbers.
+    if request.endpoint != "metrics":
+        g.request_start_time = perf_counter()
+
+
+@app.after_request
+def record_request_metrics(response):
+    if request.endpoint != "metrics":
+        endpoint = request.endpoint or "unknown"
+
+        HTTP_REQUESTS_TOTAL.labels(
+            method=request.method,
+            endpoint=endpoint,
+            status_code=response.status_code,
+        ).inc()
+
+        start_time = getattr(g, "request_start_time", None)
+
+        if start_time is not None:
+            duration = perf_counter() - start_time
+
+            HTTP_REQUEST_DURATION_SECONDS.labels(
+                method=request.method,
+                endpoint=endpoint,
+            ).observe(duration)
+
+    return response
 
 
 @app.route("/")
@@ -19,7 +72,7 @@ def health():
     return jsonify(
         service="system-status-dashboard",
         status="healthy",
-        version=APP_VERSION
+        version=APP_VERSION,
     )
 
 
@@ -27,7 +80,7 @@ def health():
 def metrics_data():
     boot_time = datetime.fromtimestamp(
         psutil.boot_time(),
-        tz=timezone.utc
+        tz=timezone.utc,
     )
 
     uptime_seconds = int(
@@ -50,7 +103,7 @@ def metrics_data():
         memory=round(psutil.virtual_memory().percent, 1),
         disk=round(psutil.disk_usage("/").percent, 1),
         uptime=uptime,
-        version=APP_VERSION
+        version=APP_VERSION,
     )
 
 
@@ -62,4 +115,8 @@ def metrics():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=True,
+    )
