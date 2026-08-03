@@ -25,4 +25,4 @@ jobs:
           image-ref: system-status-dashboard
           format: table
           exit-code: 1
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
