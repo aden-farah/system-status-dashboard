@@ -1,17 +1,28 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  test:
+  build-and-scan:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Workflow started
-        run: echo "GitHub Actions is working!"
+      - name: Build Docker image
+        run: docker build -t system-status-dashboard ./app
+
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: system-status-dashboard
+          format: table
+          exit-code: 0
+          severity: CRITICAL,HIGH
