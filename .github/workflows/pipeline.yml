@@ -8,8 +8,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  build-and-scan:
+  build-test-scan-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -38,3 +42,19 @@ jobs:
           exit-code: 1
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag Docker image
+        if: github.event_name == 'push'
+        run: docker tag system-status-dashboard ghcr.io/${{ github.repository_owner }}/system-status-dashboard:latest
+
+      - name: Push Docker image
+        if: github.event_name == 'push'
+        run: docker push ghcr.io/${{ github.repository_owner }}/system-status-dashboard:latest
