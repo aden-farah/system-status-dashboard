@@ -2,7 +2,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   name                = var.vm_name
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
-  size                = "Standard_B2s"
+  size                = "Standard_D2s_v3"
 
   admin_username = var.admin_username
 
