@@ -33,3 +33,13 @@ variable "admin_username" {
   type        = string
   default     = "azureuser"
 }
+
+variable "admin_ip_cidr" {
+  description = "Public IP address allowed to access SSH and Grafana"
+  type        = string
+}
+
+variable "ssh_public_key_path" {
+  description = "Path to the SSH public key used for the virtual machine"
+  type        = string
+}
