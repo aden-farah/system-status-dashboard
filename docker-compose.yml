@@ -1,8 +1,6 @@
 services:
   flask-app:
     image: ghcr.io/aden-farah/system-status-dashboard:latest
-    build:
-      context: ./app
     container_name: flask-app
     ports:
       - "5000:5000"
@@ -36,16 +34,20 @@ services:
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro"
     restart: unless-stopped
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker:/var/lib/docker:ro
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker:/var/lib/docker:ro"
     restart: unless-stopped
 
 volumes:
