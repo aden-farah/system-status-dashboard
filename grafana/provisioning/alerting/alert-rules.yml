@@ -124,7 +124,7 @@ groups:
             datasourceUid: prometheus
             model:
               editorMode: code
-              expr: "100 * (\r\n  1 - (\r\n    node_filesystem_avail_bytes{\r\n      job=\"node-exporter\",\r\n      fstype=~\"ext4|xfs\",\r\n      mountpoint=~\"^/$|^/mnt/docker-desktop-disk$\"\r\n    }\r\n    /\r\n    node_filesystem_size_bytes{\r\n      job=\"node-exporter\",\r\n      fstype=~\"ext4|xfs\",\r\n      mountpoint=~\"^/$|^/mnt/docker-desktop-disk$\"\r\n    }\r\n  )\r\n)"
+              expr: "100 * (\n  1 - max(\n    node_filesystem_avail_bytes{job=\"node-exporter\", fstype=~\"ext4|xfs\", mountpoint=\"/\"}\n    /\n    node_filesystem_size_bytes{job=\"node-exporter\", fstype=~\"ext4|xfs\", mountpoint=\"/\"}\n  )\n)"
               instant: true
               intervalMs: 1000
               legendFormat: __auto
@@ -167,3 +167,29 @@ groups:
           service: host
           severity: warning
         isPaused: false
+
+# Where the alerts above are sent. Without this they fire and turn red in the
+# Grafana UI but nobody is told. The webhook URL comes from the
+# DISCORD_WEBHOOK_URL environment variable, so it stays out of this repository.
+contactPoints:
+  - orgId: 1
+    name: discord-alerts
+    receivers:
+      - uid: discord-webhook
+        type: discord
+        settings:
+          url: ${DISCORD_WEBHOOK_URL}
+          title: "[{{ .CommonLabels.severity }}] {{ .CommonLabels.alertname }}"
+        # Also notify when an alert stops firing, so a quiet channel means
+        # nothing is wrong rather than still broken.
+        disableResolveMessage: false
+
+policies:
+  - orgId: 1
+    receiver: discord-alerts
+    group_by:
+      - alertname
+      - service
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
