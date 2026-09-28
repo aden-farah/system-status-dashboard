@@ -1,5 +1,12 @@
+# Required environment (in a .env file next to this one, which is gitignored):
+#   GRAFANA_ADMIN_PASSWORD  - Grafana admin password
+#   DISCORD_WEBHOOK_URL     - optional, where Grafana sends alerts
+
 services:
   flask-app:
+    # build: used locally, image: used on the VM where CI has published it.
+    # Run "docker compose up -d --build" locally to pick up code changes.
+    build: ./app
     image: ghcr.io/aden-farah/system-status-dashboard:latest
     container_name: flask-app
     ports:
@@ -7,8 +14,13 @@ services:
     restart: unless-stopped
 
   prometheus:
-    image: prom/prometheus:latest
+    # Versions are pinned so the stack is the same every time it is rebuilt.
+    image: prom/prometheus:v3.5.0
     container_name: prometheus
+    # Bound to localhost, so /targets can be checked over an SSH tunnel
+    # (ssh -L 9090:localhost:9090 ...) without exposing it publicly.
+    ports:
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -19,10 +31,17 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.2.2
     container_name: grafana
     ports:
       - "3000:3000"
+    environment:
+      # Without this Grafana starts with the default admin/admin. The ":?" makes
+      # Compose refuse to start if it is missing, instead of falling back.
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # Used by the Discord contact point in the alerting provisioning file.
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-https://discord.com/api/webhooks/000000000000000000/not-configured}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -32,22 +51,33 @@ services:
     restart: unless-stopped
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.9.1
     container_name: node-exporter
+    # Mounts the specific paths it needs rather than all of / as one directory,
+    # so the container cannot read things like /etc/shadow or the SSH keys.
     command:
-      - "--path.rootfs=/host"
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     volumes:
-      - "/:/host:ro"
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
     restart: unless-stopped
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
     container_name: cadvisor
+    # cAdvisor needs the Docker socket to see the containers. Note that :ro
+    # makes the socket file read-only, not the Docker API -- anything that can
+    # write to this socket can talk to the Docker daemon, which runs as root.
+    # That is unavoidable with cAdvisor, so this service is never published.
     volumes:
-      - "/:/rootfs:ro"
-      - "/var/run:/var/run:ro"
-      - "/sys:/sys:ro"
-      - "/var/lib/docker:/var/lib/docker:ro"
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
     restart: unless-stopped
 
 volumes:
