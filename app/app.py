@@ -115,7 +115,9 @@ def metrics():
 
 
 if __name__ == "__main__":
+    # Local development only, bound to this machine. In Docker the app is
+    # served by Gunicorn instead -- see the CMD in the Dockerfile.
     app.run(
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=5000,
     )
