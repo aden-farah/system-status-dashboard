@@ -6,6 +6,8 @@
     --text: #f8fafc;
     --muted: #94a3b8;
     --healthy: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
 }
 
 * {
@@ -55,20 +57,24 @@ h1 {
 }
 
 .status-badge {
+    /* Set by script.js once real data arrives. Starts neutral so the badge
+       never claims healthy before anything has been checked. */
+    --status: var(--muted);
+
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 10px 18px;
-    border: 1px solid var(--healthy);
+    border: 1px solid var(--status);
     border-radius: 999px;
-    color: var(--healthy);
+    color: var(--status);
     font-weight: 600;
 }
 
 .status-dot {
     width: 10px;
     height: 10px;
-    background: var(--healthy);
+    background: var(--status);
     border-radius: 50%;
 }
 

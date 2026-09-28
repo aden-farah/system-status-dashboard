@@ -22,9 +22,9 @@
           </p>
         </div>
 
-        <span class="status-badge">
+        <span class="status-badge" id="status-badge">
           <span class="status-dot"></span>
-          Healthy
+          <span id="status-text">Checking&hellip;</span>
         </span>
       </header>
 
@@ -58,25 +58,15 @@
 
         <article class="status-card">
           <div class="card-heading">
-            <span class="card-icon">🐳</span>
-            <p class="card-label">Flask Container</p>
+            <span class="card-icon">⏱</span>
+            <p class="card-label">Server Uptime</p>
           </div>
-          <h2>Running</h2>
-          <p class="card-description">Flask container state</p>
+          <h2 id="uptime-value">--</h2>
+          <p class="card-description">Time since the host booted</p>
         </article>
       </section>
 
       <section class="details-panel">
-        <div class="detail-row">
-          <span>Server Status</span>
-          <strong>Healthy</strong>
-        </div>
-
-        <div class="detail-row">
-          <span>Server Uptime</span>
-          <strong id="uptime-value">Not available yet</strong>
-        </div>
-
         <div class="detail-row">
           <span>Application Version</span>
           <strong id="version-value">v1.0.0</strong>
