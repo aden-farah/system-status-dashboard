@@ -225,3 +225,4 @@ terraform/.terraform/
 terraform/tfplan*
 
 .vscode/
+*.patch

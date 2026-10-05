@@ -59,7 +59,7 @@ The status badge is driven by the application's own data rather than being a fix
 2. GitHub Actions runs pytest, builds the Flask Docker image and scans it with Trivy.
 3. The approved image is pushed to GitHub Container Registry.
 4. GitHub Actions authenticates to Azure using OIDC.
-5. Azure VM Run Command starts the deployment on the VM.
+5. If the Azure environment is running, Azure VM Run Command starts the deployment on the VM.
 6. The VM pulls the latest Flask image and recreates the Flask service with Docker Compose.
 7. Prometheus collects application, host and container metrics.
 8. Grafana queries Prometheus and displays dashboards and alerts.
@@ -110,7 +110,7 @@ Pipeline flow:
 7. Azure VM Run Command starts the deployment.
 8. The VM pulls the latest image and recreates the Flask service with Docker Compose.
 
-Pull requests run the testing, build and security scan stages. Image publishing and Azure deployment only run for pushes to `main`.
+Pull requests run the testing, build and security scan stages. Image publishing runs only for pushes to `main`. Deployment runs only when the Azure environment exists — see the deployment switch below.
 
 ## Azure Infrastructure
 
